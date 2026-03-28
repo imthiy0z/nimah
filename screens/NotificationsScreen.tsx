@@ -43,8 +43,7 @@ export default function NotificationsScreen({ onBack }: NotificationsScreenProps
       >
         <UpcomingAppointment
           onPress={() => {
-            console.log('Appointment card pressed');
-            // Handle navigation to appointment details
+            console.log('Upcoming pickup card pressed');
           }}
         />
       </ScrollView>

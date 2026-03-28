@@ -180,7 +180,7 @@ export default function NearbyStoresMap({ onPartnerPress }: NearbyStoresMapProps
                     <Text style={styles.distanceText}>
                       {t('map.kmNearest', undefined, { km: nearest.km.toFixed(1) })}
                     </Text>
-                    <Text style={styles.hospitalName}>
+                    <Text style={styles.partnerName}>
                       {t(`stores.${nearest.storeId}.name`)}
                     </Text>
                   </>
@@ -192,7 +192,7 @@ export default function NearbyStoresMap({ onPartnerPress }: NearbyStoresMapProps
                           count: String(MAP_DEMO_PARTNERS.length),
                         })}
                     </Text>
-                    <Text style={styles.hospitalName}>
+                    <Text style={styles.partnerName}>
                       {location ? t('map.placedNear') : t('map.demoData')}
                     </Text>
                   </>
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     color: Theme.colors.text.primary,
     marginBottom: Theme.spacing.xs,
   },
-  hospitalName: {
+  partnerName: {
     fontSize: 14,
     color: Theme.colors.text.muted,
   },

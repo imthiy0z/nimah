@@ -1,96 +1,60 @@
-# Badr Al Samaa Hospital Mobile App
+# Nimah
 
-A beautiful, modern mobile application for Badr Al Samaa Group of Hospitals & Medical Centres built with Expo and React Native.
+Mobile app for **Nimah** — save surplus food, pay less, waste less. Built with **Expo** and **React Native** (TypeScript).
 
-## Features
+## What’s in the app
 
-- ✨ Smooth animations with React Native Reanimated
-- 🎨 Glassmorphism (liquid glass) effects
-- 🎯 Modern UI with Badr Al Samaa brand colors
-- 📱 Cross-platform (iOS, Android, Web)
+- **Customer:** Home, Discover, cart, orders, rewards, profile, pickup location, English / Arabic (`i18n`).
+- **Store owner:** Partner portal — dashboard, incoming orders, listings (add / edit / demo scan / bulk stock), messages, store menu.
+- **UI:** Orange brand theme, maps, blur / gradients, OMR display.
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
+- Node.js 18+ recommended  
+- npm (or yarn / pnpm)  
+- [Expo Go](https://expo.dev/go) on a device for quick testing (optional)
 
-- Node.js (v18 or higher)
-- npm or yarn
-- Expo CLI (installed globally or via npx)
+## Setup
 
-### Installation
-
-1. Install dependencies:
 ```bash
 npm install
-```
-
-2. Start the development server:
-```bash
 npm start
 ```
 
-3. Run on your device:
-   - Scan the QR code with Expo Go app (iOS/Android)
-   - Press `i` for iOS simulator
-   - Press `a` for Android emulator
-   - Press `w` for web browser
+Then press `i` (iOS simulator), `a` (Android emulator), or `w` (web), or scan the QR code with Expo Go.
 
-## Adding Your Onboarding Image
+Clear cache if Metro misbehaves:
 
-1. Place your image in the `assets/` folder
-2. Name it `onboarding-image.png` (or update the import in `screens/OnboardingScreen.tsx`)
-3. Uncomment the Image component in `OnboardingScreen.tsx` (around line 80)
-4. Comment out or remove the placeholder gradient section
-
-Example:
-```tsx
-<Image
-  source={require('../assets/onboarding-image.png')}
-  style={styles.image}
-  contentFit="cover"
-  transition={300}
-/>
+```bash
+npx expo start --clear
 ```
 
-## Project Structure
+## Project layout
 
 ```
-├── assets/              # Images, fonts, and other static assets
-├── constants/           # Theme, colors, and configuration
-│   ├── colors.ts       # Brand color palette
-│   └── theme.ts        # Theme configuration
-├── screens/             # Screen components
-│   └── OnboardingScreen.tsx
-├── App.tsx             # Main app entry point
-└── babel.config.js     # Babel configuration
+├── App.tsx                 # Root navigation / role switching
+├── index.ts                # Entry (providers)
+├── assets/                 # Images, icons
+├── components/             # Shared UI (tabs, carousel, modals, …)
+├── constants/              # Theme, mock partners, discover collections
+├── contexts/               # Language, pickup location
+├── i18n/                   # en / ar strings
+├── screens/                # Customer screens
+├── screens/storeOwner/     # Partner portal
+└── utils/                  # e.g. safe AsyncStorage helpers
 ```
 
-## Brand Colors
+## Brand colors
 
-- **Primary**: #DA5665 (Badr Red/Pink)
-- **Secondary**: #2A3F4E (Dark Slate Blue)
-- **Background**: #F7F7F7 (Off-White/Grey)
-- **WhatsApp**: #25D366 (WhatsApp Green)
+- **Primary:** `#F97316` (orange)  
+- **Primary dark:** `#EA580C`  
+- **Secondary / text:** `#2A3F4E`  
+- **Background:** `#F7F7F7`
 
-## Technologies Used
+## Tech stack
 
-- **Expo** - React Native framework
-- **React Native Reanimated** - Smooth animations
-- **Expo Blur** - Glassmorphism effects
-- **Expo Linear Gradient** - Gradient backgrounds
-- **Expo Image** - Optimized image component
-- **TypeScript** - Type safety
-
-## Next Steps
-
-- [ ] Add navigation (React Navigation)
-- [ ] Implement authentication screens
-- [ ] Create main app screens (Home, Appointments, etc.)
-- [ ] Add custom fonts (Source Sans Pro)
-- [ ] Integrate API endpoints
+Expo · React Native · TypeScript · Expo Image / Blur / Linear Gradient · react-native-maps · Reanimated · AsyncStorage
 
 ## License
 
-Private - Badr Al Samaa Hospital
-
-
+Private — Nimah.
