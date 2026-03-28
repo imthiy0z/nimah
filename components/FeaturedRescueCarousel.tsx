@@ -110,7 +110,15 @@ export default function FeaturedRescueCarousel({
 
           return (
             <View key={`${store.id}-${bag.id}`} style={[styles.cardWrap, { width: PICK_CARD_WIDTH }]}>
-              <View style={styles.cardOuter}>
+              <Pressable
+                onPress={() => openReserve(store, bag)}
+                style={({ pressed }) => [
+                  styles.cardOuter,
+                  pressed && styles.cardOuterPressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={t('carousel.reserve')}
+              >
                 <View style={styles.imageBlock}>
                   <Image source={store.image || bag.image} style={styles.imageFill} contentFit="cover" />
                   <LinearGradient
@@ -192,26 +200,19 @@ export default function FeaturedRescueCarousel({
                           {kmShort}
                         </Text>
                       </View>
-                      <Pressable
-                        onPress={() => openReserve(store, bag)}
-                        hitSlop={{ top: 6, bottom: 6, left: 8, right: 8 }}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('carousel.reserve')}
-                      >
-                        <View style={styles.reserveInline}>
-                          <Text style={styles.reserveInlineText}>{t('carousel.reserve')}</Text>
-                          <Ionicons
-                            name="chevron-forward"
-                            size={11}
-                            color={GREEN_TIME}
-                            style={rtlMirror}
-                          />
-                        </View>
-                      </Pressable>
+                      <View style={styles.reserveInline} pointerEvents="none">
+                        <Text style={styles.reserveInlineText}>{t('carousel.reserve')}</Text>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={11}
+                          color={GREEN_TIME}
+                          style={rtlMirror}
+                        />
+                      </View>
                     </View>
                   </View>
                 </View>
-              </View>
+              </Pressable>
             </View>
           );
         })}
@@ -280,6 +281,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 10,
     elevation: 4,
+  },
+  cardOuterPressed: {
+    opacity: 0.94,
   },
   imageBlock: {
     height: IMAGE_HEIGHT,

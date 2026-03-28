@@ -42,6 +42,58 @@ export type PartnerStore = {
   bags: RescueBag[];
 };
 
+/** Rescue bag pay price is always strictly below this (OMR). */
+const MAX_RESCUE_PRICE_OMR = 1.2;
+const MIN_RESCUE_PRICE_OMR = 0.5;
+const MIN_DISCOUNT_PCT = 50;
+const MAX_DISCOUNT_PCT = 70;
+
+function hashStringToSeed(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h) || 1;
+}
+
+function mulberry32(seed: number) {
+  return () => {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Stable per-bag demo pricing: discount shown as ~50–70% off, pay price < 1.2 OMR.
+ * Seeded from store + bag id so values don’t change on every reload.
+ */
+function rescuePricingForBag(
+  storeId: string,
+  bagId: string
+): { retailValue: number; price: number } {
+  const rand = mulberry32(hashStringToSeed(`${storeId}:${bagId}`));
+  const discountPct =
+    MIN_DISCOUNT_PCT +
+    Math.floor(rand() * (MAX_DISCOUNT_PCT - MIN_DISCOUNT_PCT + 1));
+  const maxPay = Math.round((MAX_RESCUE_PRICE_OMR - 0.01) * 100) / 100;
+  const rawPrice = MIN_RESCUE_PRICE_OMR + rand() * (maxPay - MIN_RESCUE_PRICE_OMR);
+  const price = Math.round(rawPrice * 100) / 100;
+  const retailValue = Math.round((price / (1 - discountPct / 100)) * 100) / 100;
+  return { retailValue, price };
+}
+
+function applyRescuePricingToStores(stores: PartnerStore[]): PartnerStore[] {
+  return stores.map((store) => ({
+    ...store,
+    bags: store.bags.map((bag) => ({
+      ...bag,
+      ...rescuePricingForBag(store.id, bag.id),
+    })),
+  }));
+}
+
 export const CATEGORY_FILTERS = [
   'All',
   'Meals',
@@ -57,7 +109,7 @@ export const MOCK_PICKUP_LOCATION = {
   hint: 'Tap to change',
 } as const;
 
-export const MOCK_STORES: PartnerStore[] = [
+const MOCK_STORES_SEED: PartnerStore[] = [
   {
     id: 'neeb',
     name: 'Neeb',
@@ -406,6 +458,15 @@ export const MOCK_STORES: PartnerStore[] = [
   },
 ];
 
+export const MOCK_STORES: PartnerStore[] =
+  applyRescuePricingToStores(MOCK_STORES_SEED);
+
+function getBagPriceFromMockStores(storeId: string, bagId: string): number {
+  const store = MOCK_STORES.find((s) => s.id === storeId);
+  const bag = store?.bags.find((b) => b.id === bagId);
+  return bag?.price ?? 0.91;
+}
+
 export const MAP_DEMO_PARTNERS = MOCK_STORES;
 
 export function getStoreById(id: string): PartnerStore | undefined {
@@ -572,7 +633,7 @@ export const MOCK_ORDERS: MockOrder[] = [
     bagId: 'neeb-pastry-surprise',
     storeName: 'Neeb',
     bagTitle: 'Pastry surprise box',
-    price: 4.25,
+    price: getBagPriceFromMockStores('neeb', 'neeb-pastry-surprise'),
     pickupWindow: 'Tonight 8:00–9:00 PM',
     status: 'upcoming',
     dateLabel: 'Mar 23',
@@ -583,7 +644,7 @@ export const MOCK_ORDERS: MockOrder[] = [
     bagId: 'kucu-combo-bag',
     storeName: 'Kucu',
     bagTitle: 'Combo surplus bag',
-    price: 4.99,
+    price: getBagPriceFromMockStores('kucu', 'kucu-combo-bag'),
     pickupWindow: 'Picked up',
     status: 'completed',
     dateLabel: 'Mar 20',
@@ -594,7 +655,7 @@ export const MOCK_ORDERS: MockOrder[] = [
     bagId: 'lov-dessert-magic',
     storeName: 'Lovera',
     bagTitle: 'Dessert magic box',
-    price: 5.49,
+    price: getBagPriceFromMockStores('lovera', 'lov-dessert-magic'),
     pickupWindow: 'Picked up',
     status: 'completed',
     dateLabel: 'Mar 18',
@@ -629,7 +690,10 @@ const GENERIC_OWNER_ORDERS: StoreOwnerIncomingOrder[] = [
     customerLabel: 'Ahmed K.',
     itemsSummary: 'Cinnamon pastry cake',
     qty: 2,
-    totalOmr: 2.24,
+    totalOmr:
+      Math.round(
+        getBagPriceFromMockStores('neeb', 'neeb-pastry-surprise') * 2 * 100
+      ) / 100,
     pickupWindow: 'Today 7:00–9:00 PM',
     status: 'new',
     placedAt: '12 min ago',
@@ -639,7 +703,7 @@ const GENERIC_OWNER_ORDERS: StoreOwnerIncomingOrder[] = [
     customerLabel: 'Sara M.',
     itemsSummary: 'Brunch rolls platter',
     qty: 1,
-    totalOmr: 1.15,
+    totalOmr: getBagPriceFromMockStores('neeb', 'neeb-brunch-bundle'),
     pickupWindow: 'Today 9:00–10:00 AM',
     status: 'preparing',
     placedAt: '34 min ago',
@@ -649,7 +713,7 @@ const GENERIC_OWNER_ORDERS: StoreOwnerIncomingOrder[] = [
     customerLabel: 'Omar H.',
     itemsSummary: 'Chicken sandwich combo',
     qty: 1,
-    totalOmr: 1.2,
+    totalOmr: getBagPriceFromMockStores('kucu', 'kucu-combo-bag'),
     pickupWindow: 'Today 8:30–10:00 PM',
     status: 'ready',
     placedAt: '1 hr ago',

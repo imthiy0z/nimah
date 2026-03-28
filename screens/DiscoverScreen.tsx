@@ -3,6 +3,7 @@ import {
   View,
   StyleSheet,
   Text,
+  TextInput,
   StatusBar,
   ScrollView,
   Pressable,
@@ -60,6 +61,40 @@ function isPickupTimeGreen(section: 'now' | 'later', window: string): boolean {
   return s.includes('now') || s.includes('tonight') || s.includes('today');
 }
 
+type TranslateFn = (
+  path: string,
+  fallback?: string,
+  vars?: Record<string, string | number>
+) => string;
+
+/** Case-insensitive match on English mock fields + current-locale `t()` strings. */
+function storeMatchesSearchQuery(
+  store: PartnerStore,
+  query: string,
+  t: TranslateFn
+): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+
+  const haystack: string[] = [
+    store.name,
+    store.tagline,
+    store.address,
+    ...store.categories,
+    ...store.bags.flatMap((b) => [b.title, b.blurb, b.pickupWindow]),
+    t(`stores.${store.id}.name`, store.name),
+    t(`stores.${store.id}.tagline`, store.tagline),
+    ...store.categories.map((c) => t(`categories.${c}`, c)),
+    ...store.bags.flatMap((b) => [
+      t(`bags.${b.id}.title`, b.title),
+      t(`bags.${b.id}.blurb`, b.blurb),
+      t(`bags.${b.id}.pickup`, b.pickupWindow),
+    ]),
+  ];
+
+  return haystack.some((s) => typeof s === 'string' && s.toLowerCase().includes(q));
+}
+
 /** Shorter card: smaller hero; detail block carries more of the card */
 const STORE_IMAGE_HEIGHT = 112;
 const LOGO_SIZE = 46;
@@ -84,6 +119,7 @@ export default function DiscoverScreen({
 }: DiscoverScreenProps) {
   const { width } = useWindowDimensions();
   const { t, isRtl } = useLanguage();
+  const [searchQuery, setSearchQuery] = useState('');
   const insets = useSafeAreaInsets();
   const gutter = SCREEN_HPAD;
   const headerTop = insets.top + Theme.spacing.sm;
@@ -118,13 +154,17 @@ export default function DiscoverScreen({
     } else if (priceBand === 'under10') {
       list = list.filter((s) => getMinBagPrice(s) < 10);
     }
+    const q = searchQuery.trim();
+    if (q) {
+      list = list.filter((s) => storeMatchesSearchQuery(s, q, t));
+    }
     list.sort((a, b) => {
       if (sortMode === 'distance') return a.distanceKm - b.distanceKm;
       if (sortMode === 'price') return getMinBagPrice(a) - getMinBagPrice(b);
       return b.rating - a.rating;
     });
     return list;
-  }, [filtered, filterCategory, sortMode, priceBand]);
+  }, [filtered, filterCategory, sortMode, priceBand, searchQuery, t]);
 
   const availableNow = useMemo(
     () => processedStores.filter(hasPickupAvailableNow),
@@ -307,7 +347,28 @@ export default function DiscoverScreen({
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
             <Ionicons name="search" size={20} color={Theme.colors.text.muted} />
-            <Text style={styles.searchPlaceholder}>{t('discover.searchPh')}</Text>
+            <TextInput
+              style={[styles.searchInput, { textAlign: isRtl ? 'right' : 'left' }]}
+              placeholder={t('discover.searchPh')}
+              placeholderTextColor={Theme.colors.text.muted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+              autoCorrect={false}
+              autoCapitalize="none"
+              clearButtonMode="never"
+              accessibilityLabel={t('discover.searchPh')}
+            />
+            {searchQuery.length > 0 ? (
+              <Pressable
+                onPress={() => setSearchQuery('')}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel={t('discover.clearSearch')}
+              >
+                <Ionicons name="close-circle" size={22} color={Theme.colors.text.muted} />
+              </Pressable>
+            ) : null}
           </View>
         </View>
 
@@ -414,7 +475,11 @@ export default function DiscoverScreen({
 
         <View style={styles.storeList}>
           {processedStores.length === 0 ? (
-            <Text style={styles.emptySub}>{t('discover.emptyFiltered')}</Text>
+            <Text style={styles.emptySub}>
+              {searchQuery.trim()
+                ? t('discover.noSearchResults', undefined, { q: searchQuery.trim() })
+                : t('discover.emptyFiltered')}
+            </Text>
           ) : (
             <>
               {availableNow.map((store) => renderOneStore(store, 'now'))}
@@ -609,9 +674,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.06)',
   },
-  searchPlaceholder: {
+  searchInput: {
+    flex: 1,
+    minWidth: 0,
+    paddingVertical: 0,
     fontSize: 14,
-    color: Theme.colors.text.muted,
+    fontWeight: '500',
+    color: Theme.colors.text.primary,
   },
   sectionTitle: {
     fontSize: 20,

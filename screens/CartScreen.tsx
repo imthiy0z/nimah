@@ -65,7 +65,7 @@ export default function CartScreen({
     () => cartLines.reduce((sum, l) => sum + l.price * l.qty, 0),
     [cartLines]
   );
-  const deliveryFee = deliveryMode === 'delivery' ? 1.5 : 0;
+  const deliveryFee = deliveryMode === 'delivery' ? 0.5 : 0;
   const rewardsDiscount = useRewards ? Math.min(2, subtotal * 0.15) : 0;
   const total = subtotal + deliveryFee - rewardsDiscount;
 

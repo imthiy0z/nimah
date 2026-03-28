@@ -261,6 +261,8 @@ export const ar = {
     emptySectionNow: 'لا توجد متاجر متاحة للاستلام اليوم في هذه القائمة.',
     emptySectionLater: 'لا توجد نوافذ لاحقة تطابق عوامل التصفية.',
     emptyFiltered: 'لا توجد متاجر تطابق عوامل التصفية.',
+    noSearchResults: 'لا توجد متاجر تطابق «{{q}}». جرّب اسماً أو وجبة أو منطقة أخرى.',
+    clearSearch: 'مسح البحث',
     pickupToday: 'اليوم',
     pickupTomorrow: 'غداً',
     pickupLater: 'لاحقاً',

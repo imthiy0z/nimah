@@ -262,6 +262,8 @@ export const en = {
     emptySectionNow: 'Nothing available for pickup today in this list.',
     emptySectionLater: 'No later pickup windows match your filters.',
     emptyFiltered: 'No stores match your filters.',
+    noSearchResults: 'No stores match "{{q}}". Try another name, meal, or area.',
+    clearSearch: 'Clear search',
     pickupToday: 'Today',
     pickupTomorrow: 'Tomorrow',
     pickupLater: 'Later',
