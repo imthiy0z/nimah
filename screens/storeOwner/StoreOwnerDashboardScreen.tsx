@@ -15,11 +15,7 @@ import { Theme } from '../../constants/theme';
 import StoreOwnerTabBar from '../../components/StoreOwnerTabBar';
 import StoreOwnerHeader from '../../components/StoreOwnerHeader';
 import { useLanguage } from '../../contexts/LanguageContext';
-import {
-  getStoreById,
-  getStoreOwnerIncomingOrders,
-  getStoreOwnerMessageThreads,
-} from '../../constants/mockData';
+import { getStoreById, getStoreOwnerIncomingOrders } from '../../constants/mockData';
 import OmrCurrency from '../../components/OmrCurrency';
 
 const SCREEN_HPAD = Theme.spacing.sm + Theme.spacing.xs;
@@ -51,9 +47,6 @@ export default function StoreOwnerDashboardScreen({
   const orders = useMemo(() => getStoreOwnerIncomingOrders(storeId), [storeId]);
   const newCount = orders.filter((o) => o.status === 'new').length;
   const readyCount = orders.filter((o) => o.status === 'ready').length;
-  const threads = getStoreOwnerMessageThreads(storeId);
-  const unreadMessages = threads.filter((x) => x.unread).length;
-
   const listingsActive = store?.bags.reduce((n, b) => n + (b.left > 0 ? 1 : 0), 0) ?? 0;
   const displayName = store?.name ?? 'Partner';
 
@@ -221,31 +214,6 @@ export default function StoreOwnerDashboardScreen({
           </Pressable>
         </View>
 
-        <Text style={[styles.sectionTitle, { paddingHorizontal: SCREEN_HPAD }]}>
-          {t('storeOwner.quickLinksTitle')}
-        </Text>
-        <View style={[styles.linkStack, { paddingHorizontal: SCREEN_HPAD }]}>
-          <Pressable
-            style={({ pressed }) => [styles.linkBtn, pressed && styles.linkPressed]}
-            onPress={() => onTabPress('owner-messages')}
-          >
-            <Ionicons name="chatbubbles-outline" size={22} color={Theme.colors.white} />
-            <Text style={styles.linkBtnTxt}>
-              {unreadMessages
-                ? t('storeOwner.actionMessagesUnread', undefined, { n: String(unreadMessages) })
-                : t('storeOwner.actionMessages')}
-            </Text>
-            <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.9)" />
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [styles.linkBtnOutline, pressed && styles.linkPressed]}
-            onPress={() => onSupportChatPress?.()}
-          >
-            <Ionicons name="headset-outline" size={22} color={Theme.colors.primary} />
-            <Text style={styles.linkBtnOutlineTxt}>{t('storeOwner.menuHelp')}</Text>
-          </Pressable>
-        </View>
-
         <View style={[styles.tipCard, { marginHorizontal: SCREEN_HPAD }]}>
           <Ionicons name="leaf-outline" size={20} color={Theme.colors.whatsapp} />
           <Text style={styles.tipText}>{t('storeOwner.tipSurplus')}</Text>
@@ -357,30 +325,6 @@ const styles = StyleSheet.create({
   manageMid: { flex: 1, minWidth: 0 },
   manageTitle: { fontSize: 15, fontWeight: '800', color: Theme.colors.text.primary },
   manageSub: { marginTop: 2, fontSize: 12, fontWeight: '600', color: Theme.colors.text.muted },
-  linkStack: { gap: 10, marginBottom: Theme.spacing.md },
-  linkBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: Theme.colors.primary,
-    paddingVertical: 14,
-    borderRadius: Theme.borderRadius.md,
-  },
-  linkBtnTxt: { flex: 1, fontSize: 16, fontWeight: '900', color: Theme.colors.white },
-  linkBtnOutline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    borderWidth: 2,
-    borderColor: Theme.colors.primary,
-    paddingVertical: 14,
-    borderRadius: Theme.borderRadius.md,
-    backgroundColor: Theme.colors.white,
-  },
-  linkBtnOutlineTxt: { fontSize: 16, fontWeight: '900', color: Theme.colors.primary },
-  linkPressed: { opacity: 0.92 },
   tipCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',

@@ -12,8 +12,9 @@ const collectionNew = require('../assets/catogary/new on nimah.png');
 const collectionSweet = require('../assets/catogary/sweet and bakery.jpg');
 // No feast image in assets/catogary/ yet; keep the previous one.
 const collectionFeast = require('../assets/discover-collections/feast.jpg');
-const collectionFlowers = require('../assets/food/grocery/fruit-stand.jpg');
-const collectionGrocery = require('../assets/partners/green-cart-market.jpg');
+/** Pexels — free license; unique photos per collection (not reused in store cards). */
+const collectionFlowers = require('../assets/collections/flowers-collection.jpg');
+const collectionGrocery = require('../assets/collections/grocery-collection.jpg');
 
 export type DiscoverCollection = {
   id: string;

@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,9 +22,17 @@ const { width } = Dimensions.get('window');
 
 const PROFILE_HEADER_CONTENT_HEIGHT = 48;
 
+/**
+ * Illustrative kg CO₂e avoided per rescued meal equivalent (demo only).
+ * Based on rough “avoided food waste + supply chain” factors from public
+ * lifecycle studies — not measured per user. Replace with API-driven model when live.
+ */
+const EST_KG_CO2E_PER_RESCUED_MEAL = 2.7;
+
 type ProfileScreenProps = {
   onBack?: () => void;
   onReportsPress?: () => void;
+  onLogout?: () => void;
   activeTab?: string;
   onTabPress?: (tabId: string) => void;
   cartCount?: number;
@@ -32,6 +41,7 @@ type ProfileScreenProps = {
 export default function ProfileScreen({
   onBack,
   onReportsPress,
+  onLogout,
   activeTab = 'home',
   onTabPress,
   cartCount = 0,
@@ -49,9 +59,10 @@ export default function ProfileScreen({
     city: 'Your city',
   };
 
+  const demoMealsSaved = 12;
   const impact = {
-    mealsSaved: 12,
-    co2Kg: 32,
+    mealsSaved: demoMealsSaved,
+    co2Kg: Math.round(demoMealsSaved * EST_KG_CO2E_PER_RESCUED_MEAL),
     moneySaved: 84.5,
   };
 
@@ -188,7 +199,19 @@ export default function ProfileScreen({
 
         {/* Impact summary */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('profile.impact')}</Text>
+          <View style={styles.impactHeaderRow}>
+            <Text style={styles.impactSectionTitle}>{t('profile.impact')}</Text>
+            <Pressable
+              onPress={() =>
+                Alert.alert(t('profile.co2InfoTitle'), t('profile.co2InfoBody'))
+              }
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={t('profile.co2InfoA11y')}
+            >
+              <Ionicons name="information-circle-outline" size={22} color={Theme.colors.text.muted} />
+            </Pressable>
+          </View>
           <View style={styles.impactRow}>
             <BlurView intensity={24} tint="light" style={styles.impactTile}>
               <Text style={styles.impactVal}>{impact.mealsSaved}</Text>
@@ -307,7 +330,16 @@ export default function ProfileScreen({
             styles.logoutButton,
             pressed && styles.cardPressed,
           ]}
-          onPress={() => console.log('Logout')}
+          onPress={() => {
+            Alert.alert(t('profile.logoutTitle'), t('profile.logoutConfirm'), [
+              { text: t('common.cancel'), style: 'cancel' },
+              {
+                text: t('profile.logout'),
+                style: 'destructive',
+                onPress: () => onLogout?.(),
+              },
+            ]);
+          }}
           accessibilityRole="button"
           accessibilityLabel={t('profile.logout')}
         >
@@ -420,6 +452,20 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: Theme.spacing.xl,
+  },
+  impactHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Theme.spacing.xs,
+    marginBottom: Theme.spacing.md,
+  },
+  impactSectionTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '700',
+    color: Theme.colors.text.primary,
+    marginRight: Theme.spacing.sm,
   },
   sectionTitle: {
     fontSize: 18,

@@ -11,7 +11,8 @@ const STORE_PARTNER_OVERRIDES: Record<string, any> = {
   lovera: require('../assets/cover/lovera.png'),
   gregandi: require('../assets/cover/gregandi.png'),
   ladh: require('../assets/cover/ladh.jpg'),
-  'green-cart-market': require('../assets/partners/green-cart-market.jpg'),
+  'bloom-stem': require('../assets/flowers/bloom-hero.jpg'),
+  'green-cart-market': require('../assets/grocery-nimah/store-hero.jpg'),
 };
 
 const partnerStockHero: Record<string, any> = {
@@ -20,8 +21,6 @@ const partnerStockHero: Record<string, any> = {
   'omani-house': foodImages.cuisines.middleEasternRice,
   lovera: foodImages.cuisines.bakeryCroissant,
   gregandi: foodImages.cuisines.italianPizza,
-  'bloom-stem': foodImages.grocery.fruitStand,
-  'green-cart-market': foodImages.grocery.freshProduce,
 };
 
 export function heroForStore(storeId: string): any {

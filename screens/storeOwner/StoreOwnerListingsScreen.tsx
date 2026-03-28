@@ -85,17 +85,19 @@ export default function StoreOwnerListingsScreen({
   }, [bags]);
 
   const handleFormSave = useCallback(
-    (values: ListingFormValues) => {
+    (values: ListingFormValues, pickedUri: string | null) => {
       if (formMode === 'add') {
         const id = `owner-${Date.now()}`;
-        const b = bagFromForm(id, values, defaultImage, defaultTags);
+        const image = pickedUri ? { uri: pickedUri } : defaultImage;
+        const b = bagFromForm(id, values, image, defaultTags);
         if (!b) return;
-        setBags((prev) => [...prev, { ...b, image: defaultImage }]);
+        setBags((prev) => [...prev, { ...b, image }]);
       } else if (editTargetId) {
         setBags((prev) => {
           const existing = prev.find((x) => x.id === editTargetId);
           if (!existing) return prev;
-          const b = bagFromForm(editTargetId, values, existing.image, existing.tags);
+          const image = pickedUri ? { uri: pickedUri } : existing.image;
+          const b = bagFromForm(editTargetId, values, image, existing.tags);
           if (!b) return prev;
           return prev.map((x) => (x.id === editTargetId ? b : x));
         });
@@ -140,6 +142,11 @@ export default function StoreOwnerListingsScreen({
 
   const formSheetTitle =
     formMode === 'add' ? t('storeOwner.listingFormAddTitle') : t('storeOwner.listingFormEditTitle');
+
+  const formPreviewImage = useMemo(() => {
+    if (formMode !== 'edit' || !editTargetId) return undefined;
+    return bags.find((b) => b.id === editTargetId)?.image;
+  }, [bags, editTargetId, formMode]);
 
   return (
     <View style={styles.container}>
@@ -188,20 +195,22 @@ export default function StoreOwnerListingsScreen({
           </Pressable>
         </View>
 
-        <View style={[styles.jumpRow, { paddingHorizontal: SCREEN_HPAD }]}>
+        <Text style={[styles.quickLinksHeading, { paddingHorizontal: SCREEN_HPAD }]}>
+          {t('storeOwner.listingsQuickLinksTitle')}
+        </Text>
+        <View style={[styles.quickLinksCol, { paddingHorizontal: SCREEN_HPAD }]}>
           <Pressable
-            style={({ pressed }) => [styles.jumpBtn, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.queueCard, pressed && styles.pressed]}
             onPress={() => onTabPress('owner-orders')}
           >
-            <Ionicons name="bag-handle-outline" size={20} color={Theme.colors.white} />
-            <Text style={styles.jumpTxt}>{t('storeOwner.linkOpenOrders')}</Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [styles.jumpBtnOutline, pressed && styles.pressed]}
-            onPress={() => onSupportChatPress?.()}
-          >
-            <Ionicons name="help-circle-outline" size={20} color={Theme.colors.primary} />
-            <Text style={styles.jumpOutlineTxt}>{t('storeOwner.menuHelp')}</Text>
+            <View style={styles.queueIconCircle}>
+              <Ionicons name="bag-handle-outline" size={22} color={Theme.colors.primary} />
+            </View>
+            <View style={styles.queueCardText}>
+              <Text style={styles.queueCardTitle}>{t('storeOwner.linkOpenOrders')}</Text>
+              <Text style={styles.queueCardSub}>{t('storeOwner.linkOpenOrdersSub')}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color={Theme.colors.text.muted} />
           </Pressable>
         </View>
 
@@ -223,10 +232,17 @@ export default function StoreOwnerListingsScreen({
                   iconSize={13}
                   iconTintColor={Theme.colors.primaryDark}
                 />
-                <Text style={styles.retail}>
-                  {' '}
-                  ~{bag.retailValue.toFixed(2)} {t('storeOwner.retailShort')}
-                </Text>
+                <View style={styles.retailRow}>
+                  <Text style={styles.retail}>~ </Text>
+                  <OmrCurrency
+                    amount={bag.retailValue}
+                    variant="full"
+                    textStyle={styles.retail}
+                    iconSize={11}
+                    iconTintColor={Theme.colors.text.muted}
+                  />
+                  <Text style={styles.retail}> {t('storeOwner.retailShort')}</Text>
+                </View>
               </View>
             </View>
             <Pressable style={styles.editBtn} onPress={() => openEdit(bag.id)}>
@@ -244,6 +260,7 @@ export default function StoreOwnerListingsScreen({
       <ListingFormModal
         visible={formOpen}
         initial={formInitial}
+        initialPreviewImage={formPreviewImage}
         sheetTitle={formSheetTitle}
         saveLabel={t('storeOwner.listingSave')}
         cancelLabel={t('common.cancel')}
@@ -307,31 +324,42 @@ const styles = StyleSheet.create({
   toolTitle: { fontSize: 14, fontWeight: '900', color: Theme.colors.text.primary },
   toolSub: { fontSize: 11, fontWeight: '600', color: Theme.colors.text.muted, lineHeight: 14 },
   pressed: { opacity: 0.92 },
-  jumpRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  jumpBtn: {
-    flex: 1,
+  quickLinksHeading: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: Theme.colors.text.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  quickLinksCol: { gap: 10, marginBottom: 8 },
+  queueCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+    gap: 12,
     backgroundColor: Theme.colors.primary,
-    paddingVertical: 12,
-    borderRadius: Theme.borderRadius.md,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: Theme.borderRadius.lg,
   },
-  jumpTxt: { fontSize: 14, fontWeight: '900', color: Theme.colors.white },
-  jumpBtnOutline: {
-    flex: 1,
-    flexDirection: 'row',
+  queueIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.95)',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    borderWidth: 2,
-    borderColor: Theme.colors.primary,
-    paddingVertical: 12,
-    borderRadius: Theme.borderRadius.md,
-    backgroundColor: Theme.colors.white,
   },
-  jumpOutlineTxt: { fontSize: 14, fontWeight: '900', color: Theme.colors.primary },
+  queueCardText: { flex: 1, minWidth: 0 },
+  queueCardTitle: { fontSize: 16, fontWeight: '900', color: Theme.colors.white },
+  queueCardSub: {
+    marginTop: 3,
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.88)',
+    lineHeight: 16,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -346,8 +374,15 @@ const styles = StyleSheet.create({
   rowMid: { flex: 1, minWidth: 0 },
   itemTitle: { fontSize: 15, fontWeight: '800', color: Theme.colors.text.primary },
   leftLine: { marginTop: 4, fontSize: 12, fontWeight: '700', color: Theme.colors.text.muted },
-  priceRow: { flexDirection: 'row', alignItems: 'center', marginTop: 6, flexWrap: 'wrap' },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   price: { fontSize: 15, fontWeight: '900', color: Theme.colors.primaryDark },
+  retailRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
   retail: { fontSize: 12, fontWeight: '600', color: Theme.colors.text.muted },
   editBtn: { padding: 8 },
 });

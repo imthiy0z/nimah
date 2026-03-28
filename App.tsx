@@ -187,6 +187,24 @@ export default function App() {
     setActiveTab('orders');
   };
 
+  const logoutCustomer = () => {
+    setShowLogin(true);
+    setShowHome(false);
+    setShowProfile(false);
+    setShowRewards(false);
+    setShowChat(false);
+    setShowNotifications(false);
+    setShowDiscover(false);
+    setShowStoreDetail(false);
+    setShowReports(false);
+    setShowOrders(false);
+    setShowCart(false);
+    setCartLines([]);
+    setActiveTab('home');
+    setRestoreAfterOverlay('home');
+    setSelectedStoreId('');
+  };
+
   const storeOwnerScreenProps = {
     storeId: ownerStoreId,
     activeTab: storeOwnerTab,
@@ -384,6 +402,7 @@ export default function App() {
           setShowReports(true);
           setShowProfile(false);
         }}
+        onLogout={logoutCustomer}
         activeTab={activeTab}
         onTabPress={handleTabPress}
         cartCount={cartCount}

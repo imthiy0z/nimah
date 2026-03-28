@@ -25,7 +25,7 @@ export type OmrCurrencyProps = {
 
 export default function OmrCurrency({
   amount,
-  variant = 'full',
+  variant: _variant = 'full',
   iconSize = 16,
   textStyle,
   containerStyle,
@@ -33,7 +33,7 @@ export default function OmrCurrency({
 }: OmrCurrencyProps) {
   const { isRtl } = useLanguage();
   const iconW = iconSize * OMR_ICON_ASPECT;
-  const suffix = variant === 'full' ? ` ${OMR_CODE}` : '';
+  /** Show amount with official mark image only; no “OMR” letters (a11y still names the currency). */
   const label = `${OMR_CODE} ${amount.toFixed(2)}`;
 
   return (
@@ -58,7 +58,7 @@ export default function OmrCurrency({
         importantForAccessibility="no"
       />
       <Text style={[styles.amount, styles.amountBidi, textStyle]}>
-        {` ${amount.toFixed(2)}${suffix}`}
+        {` ${amount.toFixed(2)}`}
       </Text>
     </View>
   );

@@ -11,8 +11,11 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { Theme } from '../constants/theme';
+import { useLanguage } from '../contexts/LanguageContext';
 import type { RescueBag } from '../constants/mockData';
 import { foodImages } from '../constants/foodAssets';
 
@@ -89,6 +92,8 @@ type TFn = (path: string, fallback?: string, vars?: Record<string, string | numb
 type ListingFormModalProps = {
   visible: boolean;
   initial: ListingFormValues;
+  /** Existing listing image when editing (number from require or { uri }). */
+  initialPreviewImage?: any;
   sheetTitle: string;
   saveLabel: string;
   cancelLabel: string;
@@ -101,12 +106,13 @@ type ListingFormModalProps = {
   validationTitle: string;
   validationMessage: string;
   onClose: () => void;
-  onSave: (values: ListingFormValues) => void;
+  onSave: (values: ListingFormValues, pickedImageUri: string | null) => void;
 };
 
 export function ListingFormModal({
   visible,
   initial,
+  initialPreviewImage,
   sheetTitle,
   saveLabel,
   cancelLabel,
@@ -121,19 +127,47 @@ export function ListingFormModal({
   onClose,
   onSave,
 }: ListingFormModalProps) {
+  const { t } = useLanguage();
   const [values, setValues] = useState<ListingFormValues>(initial);
+  const [pickedUri, setPickedUri] = useState<string | null>(null);
 
   useEffect(() => {
-    if (visible) setValues(initial);
+    if (visible) {
+      setValues(initial);
+      setPickedUri(null);
+    }
   }, [visible, initial]);
+
+  const pickImage = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(t('storeOwner.photoPermissionTitle'), t('storeOwner.photoPermissionBody'));
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.85,
+    });
+    if (!result.canceled && result.assets[0]?.uri) {
+      setPickedUri(result.assets[0].uri);
+    }
+  }, [t]);
 
   const set =
     (key: keyof ListingFormValues) => (text: string) =>
       setValues((s) => ({ ...s, [key]: text }));
 
   const submit = useCallback(() => {
-    onSave(values);
-  }, [onSave, values]);
+    onSave(values, pickedUri);
+  }, [onSave, values, pickedUri]);
+
+  const previewSource = pickedUri
+    ? { uri: pickedUri }
+    : initialPreviewImage != null
+      ? initialPreviewImage
+      : null;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -150,6 +184,36 @@ export function ListingFormModal({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.formScroll}
           >
+            <Text style={styles.label}>{t('storeOwner.listingPhotoLabel')}</Text>
+            <Text style={styles.photoHint}>{t('storeOwner.listingPhotoHint')}</Text>
+            <View style={styles.photoRow}>
+              <View style={styles.photoThumbWrap}>
+                {previewSource ? (
+                  <Image source={previewSource} style={styles.photoThumb} contentFit="cover" />
+                ) : (
+                  <View style={styles.photoPlaceholder}>
+                    <Ionicons name="image-outline" size={32} color={Theme.colors.text.muted} />
+                  </View>
+                )}
+              </View>
+              <View style={styles.photoActions}>
+                <Pressable style={styles.photoBtn} onPress={pickImage}>
+                  <Ionicons name="camera-outline" size={18} color={Theme.colors.primary} />
+                  <Text style={styles.photoBtnTxt}>
+                    {previewSource ? t('storeOwner.listingChangePhoto') : t('storeOwner.listingAddPhoto')}
+                  </Text>
+                </Pressable>
+                {pickedUri != null ? (
+                  <Pressable
+                    style={styles.photoBtnGhost}
+                    onPress={() => setPickedUri(null)}
+                  >
+                    <Text style={styles.photoBtnGhostTxt}>{t('storeOwner.listingRemovePhoto')}</Text>
+                  </Pressable>
+                ) : null}
+              </View>
+            </View>
+
             <Text style={styles.label}>{fieldTitle}</Text>
             <TextInput
               style={styles.input}
@@ -220,6 +284,7 @@ export function ListingFormModal({
     </Modal>
   );
 }
+
 
 type ScanStockModalProps = {
   visible: boolean;
@@ -456,6 +521,51 @@ const styles = StyleSheet.create({
     color: Theme.colors.text.muted,
     marginBottom: 12,
   },
+  photoHint: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Theme.colors.text.muted,
+    marginBottom: 8,
+    lineHeight: 16,
+  },
+  photoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 4,
+  },
+  photoThumbWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: Theme.borderRadius.md,
+    overflow: 'hidden',
+    backgroundColor: Theme.colors.background,
+    borderWidth: 1,
+    borderColor: 'rgba(42,63,78,0.1)',
+  },
+  photoThumb: { width: '100%', height: '100%' },
+  photoPlaceholder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 88,
+  },
+  photoActions: { flex: 1, gap: 8 },
+  photoBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: Theme.borderRadius.md,
+    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(249, 115, 22, 0.35)',
+  },
+  photoBtnTxt: { fontSize: 14, fontWeight: '800', color: Theme.colors.primaryDark },
+  photoBtnGhost: { alignSelf: 'flex-start', paddingVertical: 4 },
+  photoBtnGhostTxt: { fontSize: 13, fontWeight: '700', color: Theme.colors.text.muted },
   formScroll: { paddingBottom: 12, gap: 0 },
   label: {
     fontSize: 12,
